@@ -26,8 +26,31 @@ type Config struct {
 	MaxIdleCon int    `yaml:"idle_connections" env:"DB_IDLE_CONNECTIONS"`
 }
 
+type Pagination struct {
+	TotalRecords int64 `json:"total_records" query:"total_records" form:"total_records"`
+	TotalPage    int   `json:"total_page" query:"total_page" form:"total_page"`
+	Offset       int   `json:"offset" query:"offset" form:"offset"`
+	Limit        int   `json:"limit" query:"limit" form:"limit"`
+	Page         int   `json:"page" query:"page" form:"page"`
+	PrevPage     int   `json:"prev_page" query:"prev_page" form:"prev_page"`
+	NextPage     int   `json:"next_page" query:"" form:""`
+}
+
+type Paging struct {
+	Page    int      `json:"page" query:"page" form:"page"`
+	OrderBy []string `json:"order_by" query:"order_by" form:"order_by"`
+	Limit   int      `json:"limit" query:"limit" form:"limit"`
+	ShowSQL bool
+}
+
+type Param struct {
+	DB     *gorm.DB
+	Paging *Paging
+}
+
 var DB *gorm.DB
 
+//Default Comment
 func Default(cfg Config) error {
 	db, err := New(cfg)
 	if err != nil {
@@ -37,6 +60,7 @@ func Default(cfg Config) error {
 	return nil
 }
 
+//New Comment
 func New(cfg Config) (*gorm.DB, error) {
 	var db *gorm.DB
 	//nolint:wsl,lll
@@ -64,39 +88,20 @@ func New(cfg Config) (*gorm.DB, error) {
 	if err != nil {
 		panic(err)
 	}
-	db.Use(
+	err = db.Use(
 		dbresolver.Register(dbresolver.Config{}).
 			SetConnMaxIdleTime(30 * time.Minute).
 			SetConnMaxLifetime(1 * time.Hour).
 			SetMaxIdleConns(80).
 			SetMaxOpenConns(100),
 	)
+	if err != nil {
+		return nil, err
+	}
 	return db, nil //nolint:wsl
 }
 
-type Pagination struct {
-	TotalRecords int64 `json:"total_records" query:"total_records" form:"total_records"`
-	TotalPage    int   `json:"total_page" query:"total_page" form:"total_page"`
-	Offset       int   `json:"offset" query:"offset" form:"offset"`
-	Limit        int   `json:"limit" query:"limit" form:"limit"`
-	Page         int   `json:"page" query:"page" form:"page"`
-	PrevPage     int   `json:"prev_page" query:"prev_page" form:"prev_page"`
-	NextPage     int   `json:"next_page" query:"" form:""`
-}
-
-type Paging struct {
-	Page    int      `json:"page" query:"page" form:"page"`
-	OrderBy []string `json:"order_by" query:"order_by" form:"order_by"`
-	Limit   int      `json:"limit" query:"limit" form:"limit"`
-	ShowSQL bool
-}
-
-type Param struct {
-	DB     *gorm.DB
-	Paging *Paging
-}
-
-// Endpoint for pagination
+// Pages Endpoint for pagination
 func Pages(p *Param, result interface{}) (paginator *Pagination, err error) {
 
 	var (
