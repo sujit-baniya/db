@@ -196,7 +196,7 @@ func Paginate(query *gorm.DB, result interface{}, paging Paging) PaginatedRespon
 	pages, err := Pages(&Param{
 		DB:     query,
 		Paging: &paging,
-	}, &result)
+	}, result)
 	if err != nil {
 		return PaginatedResponse{
 			Error: err,

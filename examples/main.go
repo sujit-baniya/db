@@ -21,22 +21,11 @@ func main() {
 	}
 
 	var (
-		dbEntity = db.DB.Where("")
-		paging   = db.Paging{}
-		bookList = struct {
-			Items      []*Message
-			Pagination *db.Pagination
-		}{}
+		paging = db.Paging{Limit: 2}
 	)
+	var messages []Message
+	var message Message
+	data := db.Paginate(db.DB.Model(&message).Where("user_id = ?", 1), &messages, paging)
 
-	pages, err := db.Pages(&db.Param{
-		DB:     dbEntity,
-		Paging: &paging,
-	}, &bookList.Items)
-	if err != nil {
-		return
-	}
-	bookList.Pagination = pages
-	fmt.Printf("%+v\n", bookList.Items)      // result data
-	fmt.Printf("%+v\n", bookList.Pagination) // result pagination
+	fmt.Println(data.Items) // result data
 }
