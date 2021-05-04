@@ -44,9 +44,9 @@ type Paging struct {
 }
 
 type PaginatedResponse struct {
-	Items      interface{}
-	Pagination *Pagination
-	Error      error
+	Items      interface{} `json:"items"`
+	Pagination *Pagination `json:"pagination"`
+	Error      error       `json:"error"`
 }
 
 type Param struct {
