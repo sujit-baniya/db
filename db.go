@@ -43,6 +43,12 @@ type Paging struct {
 	ShowSQL bool
 }
 
+type PaginatedResponse struct {
+	Items      interface{}
+	Pagination *Pagination
+	Error      error
+}
+
 type Param struct {
 	DB     *gorm.DB
 	Paging *Paging
