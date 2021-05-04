@@ -191,3 +191,19 @@ func getCounts(db *gorm.DB, anyType interface{}, done chan bool, count *int64) {
 func (p Pagination) IsEmpty() bool {
 	return p.TotalRecords <= 0
 }
+
+func Paginate(query *gorm.DB, result interface{}, paging Paging) PaginatedResponse {
+	pages, err := Pages(&Param{
+		DB:     query,
+		Paging: &paging,
+	}, &result)
+	if err != nil {
+		return PaginatedResponse{
+			Error: err,
+		}
+	}
+	return PaginatedResponse{
+		Items:      result,
+		Pagination: pages,
+	}
+}
