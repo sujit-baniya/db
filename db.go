@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/sujit-baniya/log"
@@ -37,10 +38,14 @@ type Pagination struct {
 }
 
 type Paging struct {
-	Page    int      `json:"page" query:"page" form:"page"`
-	OrderBy []string `json:"order_by" query:"order_by" form:"order_by"`
-	Limit   int      `json:"limit" query:"limit" form:"limit"`
-	ShowSQL bool
+	OrderBy        []string `json:"order_by" query:"order_by" form:"order_by"`
+	Search         string   `json:"search" query:"search" form:"search"`
+	SearchOperator string   `json:"condition" query:"condition" form:"condition"`
+	SearchBy       string   `json:"search_by" query:"search_by" form:"search_by"`
+	Limit          int      `json:"limit" query:"limit" form:"limit"`
+	Page           int      `json:"page" query:"page" form:"page"`
+	offset         int
+	ShowSQL        bool
 }
 
 type PaginatedResponse struct {
@@ -107,52 +112,82 @@ func New(cfg Config) (*gorm.DB, error) {
 	return db, nil //nolint:wsl
 }
 
+func prepareQuery(db *gorm.DB, paging *Paging) *gorm.DB {
+	var (
+		defPage  = 1
+		defLimit = 20
+	)
+
+	// if not defined
+	if paging == nil {
+		paging = &Paging{}
+	}
+
+	// debug sql
+	if paging.ShowSQL {
+		db = db.Debug()
+	}
+	// limit
+	if paging.Limit == 0 {
+		paging.Limit = defLimit
+	}
+	// page
+	if paging.Page < 1 {
+		paging.Page = defPage
+	} else if paging.Page > 1 {
+		paging.offset = (paging.Page - 1) * paging.Limit
+	}
+	// filter
+	if paging.Search != "" && paging.SearchBy != "" {
+		search := strings.Join(strings.Split(strings.TrimSpace(paging.Search), " "), " & ")
+		switch paging.SearchOperator {
+		case "lt":
+			db = db.Where(fmt.Sprintf("%s < ?", paging.SearchBy), paging.Search)
+		case "lte":
+			db = db.Where(fmt.Sprintf("%s <= ?", paging.SearchBy), paging.Search)
+		case "gt":
+			db = db.Where(fmt.Sprintf("%s > ?", paging.SearchBy), paging.Search)
+		case "gte":
+			db = db.Where(fmt.Sprintf("%s >= ?", paging.SearchBy), paging.Search)
+		case "ne":
+			db = db.Where(fmt.Sprintf("%s <> ?", paging.SearchBy), paging.Search)
+		case "nn":
+			db = db.Where(fmt.Sprintf("%s IS NOT NULL", paging.SearchBy))
+		case "n":
+			db = db.Where(fmt.Sprintf("%s IS NULL", paging.SearchBy))
+		case "c":
+			db = db.Where(fmt.Sprintf("%s LIKE ?", paging.SearchBy), "%"+paging.Search+"%")
+		default:
+			db = db.Where(fmt.Sprintf("to_tsvector(%s::text) @@ to_tsquery(?)", paging.SearchBy), search)
+			// db = db.Where(gorm.Expr(fmt.Sprintf("to_tsvector(%s::text) @@ to_tsquery(?)", paging.SearchBy)), slug.Make(paging.Search))
+		}
+	}
+	// sort
+	if len(paging.OrderBy) == 0 {
+		str := "id desc"
+		paging.OrderBy = append(paging.OrderBy, str)
+
+	}
+	for _, o := range paging.OrderBy {
+		db = db.Order(o)
+	}
+	return db.Limit(paging.Limit).Offset(paging.offset)
+}
+
 // Pages Endpoint for pagination
 func Pages(p *Param, result interface{}) (paginator *Pagination, err error) {
 
 	var (
-		done     = make(chan bool, 1)
-		db       = p.DB.Session(&gorm.Session{})
-		defPage  = 1
-		defLimit = 20
-		count    int64
-		offset   int
+		done  = make(chan bool, 1)
+		db    = p.DB.Session(&gorm.Session{})
+		count int64
 	)
-
 	// get all counts
 	go getCounts(db, result, done, &count)
 
-	// if not defined
-	if p.Paging == nil {
-		p.Paging = &Paging{}
-	}
-
-	// debug sql
-	if p.Paging.ShowSQL {
-		db = db.Debug()
-	}
-	// limit
-	if p.Paging.Limit == 0 {
-		p.Paging.Limit = defLimit
-	}
-	// page
-	if p.Paging.Page < 1 {
-		p.Paging.Page = defPage
-	} else if p.Paging.Page > 1 {
-		offset = (p.Paging.Page - 1) * p.Paging.Limit
-	}
-	// sort
-	if len(p.Paging.OrderBy) > 0 {
-		for _, o := range p.Paging.OrderBy {
-			db = db.Order(o)
-		}
-	} else {
-		str := "id desc"
-		p.Paging.OrderBy = append(p.Paging.OrderBy, str)
-	}
-
+	db = prepareQuery(db, p.Paging)
 	// get
-	if errGet := db.Limit(p.Paging.Limit).Offset(offset).Find(result).Error; errGet != nil && !errors.Is(errGet, gorm.ErrRecordNotFound) {
+	if errGet := db.Find(result).Error; errGet != nil && !errors.Is(errGet, gorm.ErrRecordNotFound) {
 		return nil, errGet
 	}
 	<-done
@@ -164,7 +199,7 @@ func Pages(p *Param, result interface{}) (paginator *Pagination, err error) {
 	paginator = &Pagination{
 		TotalRecords: count,
 		Page:         p.Paging.Page,
-		Offset:       offset,
+		Offset:       p.Paging.offset,
 		Limit:        p.Paging.Limit,
 		TotalPage:    total,
 		PrevPage:     p.Paging.Page,
@@ -205,5 +240,27 @@ func Paginate(query *gorm.DB, result interface{}, paging Paging) PaginatedRespon
 	return PaginatedResponse{
 		Items:      result,
 		Pagination: pages,
+	}
+}
+
+func PaginateScope(paging Paging) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return prepareQuery(db, &paging)
+	}
+}
+
+func Count(query *gorm.DB, result interface{}) (count *int64) {
+	query.Model(result).Count(count)
+	return count
+}
+
+func FullTextSearch(db *gorm.DB, table string, search string) *gorm.DB {
+	formattedSearch := strings.Join(strings.Split(strings.TrimSpace(search), " "), " & ")
+	return db.Where(fmt.Sprintf("to_tsvector(%s::text) @@ to_tsquery(?)", table), formattedSearch)
+}
+
+func FullTextFilterScope(table string, search string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return FullTextSearch(db, table, search)
 	}
 }
