@@ -325,6 +325,8 @@ github.com/sujit-baniya/log v0.0.1 h1:uTkp2MLEGNGQF9trTVB9H9MXrslJoYJaPJVRE/ZHhk
 github.com/sujit-baniya/log v0.0.1/go.mod h1:j1rsDsC+xEiMlzynyE5zKukFlhz1VqRmL0qc6w0rdWs=
 github.com/sujit-baniya/log v0.0.2 h1:aBDkp3OH4g+FLk793HQtEFVuteaMEH3A8Lioozm3cYU=
 github.com/sujit-baniya/log v0.0.2/go.mod h1:j1rsDsC+xEiMlzynyE5zKukFlhz1VqRmL0qc6w0rdWs=
+github.com/sujit-baniya/log v0.0.3 h1:7TtORKlh6jC5oGpuzWL4LDOLxg+qjC9BUQsW25b+yFg=
+github.com/sujit-baniya/log v0.0.3/go.mod h1:3HH2dfgYUGYerGLKMSmItmrHhvVHQ3NciD3OIiFBrvA=
 github.com/sujit-baniya/xid v1.2.3 h1:wHsnzn6iBcEgRrHpNQZRMupiA5CXQMRldfJxVNnq8rc=
 github.com/sujit-baniya/xid v1.2.3/go.mod h1:ZttvqxL/+7CcQQ/Mv1HjhjiLdKyZ+9lEXCMsqdpBeT4=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=

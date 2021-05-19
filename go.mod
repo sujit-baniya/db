@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/gofiber/fiber/v2 v2.9.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
-	github.com/sujit-baniya/log v0.0.2
+	github.com/sujit-baniya/log v0.0.3
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
 	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
 	golang.org/x/text v0.3.6 // indirect
