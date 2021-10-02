@@ -7,8 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sujit-baniya/log"
-	gorm2 "github.com/sujit-baniya/log/gorm"
+	"github.com/phuslu/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,8 +22,8 @@ type Config struct {
 	Password   string `yaml:"password" env:"DB_PASS"`
 	DBName     string `yaml:"db_name" env:"DB_NAME"`
 	Port       int    `yaml:"port" env:"DB_PORT"`
-	MaxOpenCon int    `yaml:"connections" env:"DB_CONNECTIONS"`
-	MaxIdleCon int    `yaml:"idle_connections" env:"DB_IDLE_CONNECTIONS"`
+	MaxOpenCon int    `yaml:"connections" env:"DB_CONNECTIONS" env-default:"100"`
+	MaxIdleCon int    `yaml:"idle_connections" env:"DB_IDLE_CONNECTIONS" env-default:"80"`
 }
 
 type Pagination struct {
@@ -61,6 +60,8 @@ type Param struct {
 
 var DB *gorm.DB
 
+var DefaultDialect string
+
 //Default Comment
 func Default(cfg Config) error {
 	db, err := New(cfg)
@@ -68,6 +69,7 @@ func Default(cfg Config) error {
 		return err
 	}
 	DB = db
+	DefaultDialect = cfg.Driver
 	return nil
 }
 
@@ -77,7 +79,7 @@ func New(cfg Config) (*gorm.DB, error) {
 	//nolint:wsl,lll
 	var err error //nolint:wsl
 	connectionString := ""
-	gormLogger := gorm2.Logger{
+	gormLogger := Logger{
 		Log: &log.DefaultLogger,
 	}
 	newLogger := gormLogger.LogMode(logger.Info)
