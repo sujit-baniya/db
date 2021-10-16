@@ -3,10 +3,10 @@ package migrations
 import (
 	"flag"
 	"fmt"
+	"github.com/sujit-baniya/db"
 	"os"
 	"strings"
 	"time"
-	"verify/modules/common/db"
 
 	"github.com/olekukonko/tablewriter"
 )

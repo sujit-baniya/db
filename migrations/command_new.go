@@ -102,6 +102,7 @@ func SmartMigration(migrationName string) string {
 			upQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
 id SERIAL PRIMARY KEY, 
+is_active bool default false,
 created_at timestamptz,
 updated_at timestamptz,
 deleted_at timestamptz
@@ -113,6 +114,7 @@ deleted_at timestamptz
 			downQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
 id SERIAL PRIMARY KEY, 
+is_active bool default false,
 created_at timestamptz,
 updated_at timestamptz,
 deleted_at timestamptz

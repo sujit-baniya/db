@@ -3,8 +3,8 @@ package migrations
 import (
 	"flag"
 	"fmt"
+	"github.com/sujit-baniya/db"
 	"strings"
-	"verify/modules/common/db"
 )
 
 type RedoCommand struct {

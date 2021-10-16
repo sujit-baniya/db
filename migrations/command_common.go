@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"fmt"
-	"verify/modules/common/db"
+	"github.com/sujit-baniya/db"
 )
 
 func ApplyMigrations(dir MigrationDirection, dryrun bool, limit int) error {
