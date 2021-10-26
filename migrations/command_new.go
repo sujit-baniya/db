@@ -99,21 +99,25 @@ func SmartMigration(migrationName string) string {
 		switch nameParts[0] {
 		case "create":
 			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			upQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
+			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;"
+			upQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
-id SERIAL PRIMARY KEY, 
+id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
 is_active bool default false,
 created_at timestamptz,
 updated_at timestamptz,
 deleted_at timestamptz
 )` + ";"
-			downQuery = "DROP TABLE IF EXISTS " + tableName + ";"
+			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;"
+			downQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
 		case "drop":
 			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			upQuery = "DROP TABLE IF EXISTS " + tableName + ";"
-			downQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
+			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;"
+			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;"
+			upQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
+			downQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
-id SERIAL PRIMARY KEY, 
+id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
 is_active bool default false,
 created_at timestamptz,
 updated_at timestamptz,
