@@ -99,7 +99,7 @@ func SmartMigration(migrationName string) string {
 		switch nameParts[0] {
 		case "create":
 			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;"
+			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
 			upQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
 id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
@@ -108,12 +108,12 @@ created_at timestamptz,
 updated_at timestamptz,
 deleted_at timestamptz
 )` + ";"
-			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;"
+			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
 			downQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
 		case "drop":
 			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;"
-			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;"
+			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
+			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
 			upQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
 			downQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
