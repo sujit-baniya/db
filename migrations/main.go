@@ -10,7 +10,14 @@ import (
 var ui cli.Ui
 
 func SetMigrationUi() {
-	ui = &cli.BasicUi{Writer: os.Stdout}
+	i := &cli.BasicUi{Writer: os.Stdout}
+	ui = &cli.ColoredUi{
+		Ui:          i,
+		OutputColor: cli.UiColorGreen,
+		ErrorColor:  cli.UiColorRed,
+		InfoColor:   cli.UiColorBlue,
+		WarnColor:   cli.UiColorYellow,
+	}
 }
 
 func MigrationMain() int {

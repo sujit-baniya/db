@@ -457,7 +457,6 @@ func (ms MigrationSet) ExecMax(db *sql.DB, dialect string, m MigrationSource, di
 				return applied, newTxError(migration, err)
 			}
 		}
-
 		for _, stmt := range migration.Queries {
 			// remove the semicolon from stmt, fix ORA-00922 issue in database oracle
 			stmt = strings.TrimSuffix(stmt, "\n")
@@ -474,6 +473,7 @@ func (ms MigrationSet) ExecMax(db *sql.DB, dialect string, m MigrationSource, di
 
 		switch dir {
 		case Up:
+			ui.Warn("Migrating " + migration.Id)
 			err = executor.Insert(&MigrationRecord{
 				Id:        migration.Id,
 				AppliedAt: time.Now(),
@@ -482,10 +482,12 @@ func (ms MigrationSet) ExecMax(db *sql.DB, dialect string, m MigrationSource, di
 				if trans, ok := executor.(*gorp.Transaction); ok {
 					_ = trans.Rollback()
 				}
-
+				ui.Error(fmt.Sprintf("Unable to migrate %s, error: %s", migration.Id, err.Error()))
 				return applied, newTxError(migration, err)
 			}
+			ui.Output("Migrated " + migration.Id)
 		case Down:
+			ui.Warn("Rolling back " + migration.Id)
 			_, err := executor.Delete(&MigrationRecord{
 				Id: migration.Id,
 			})
@@ -493,9 +495,10 @@ func (ms MigrationSet) ExecMax(db *sql.DB, dialect string, m MigrationSource, di
 				if trans, ok := executor.(*gorp.Transaction); ok {
 					_ = trans.Rollback()
 				}
-
+				ui.Error(fmt.Sprintf("Unable to rollback %s, error: %s", migration.Id, err.Error()))
 				return applied, newTxError(migration, err)
 			}
+			ui.Output("Rollback Successful " + migration.Id)
 		default:
 			panic("Not possible")
 		}
