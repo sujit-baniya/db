@@ -21,6 +21,7 @@ type Config struct {
 	Username   string `yaml:"username" env:"DB_USER"`
 	Password   string `yaml:"password" env:"DB_PASS"`
 	DBName     string `yaml:"db_name" env:"DB_NAME"`
+	QueryLog   bool   `yaml:"query_log" env:"DB_QUERY_LOG" env-default:"false"`
 	Port       int    `yaml:"port" env:"DB_PORT"`
 	MaxOpenCon int    `yaml:"connections" env:"DB_CONNECTIONS" env-default:"100"`
 	MaxIdleCon int    `yaml:"idle_connections" env:"DB_IDLE_CONNECTIONS" env-default:"80"`
@@ -80,7 +81,8 @@ func New(cfg Config) (*gorm.DB, error) {
 	var err error //nolint:wsl
 	connectionString := ""
 	gormLogger := Logger{
-		Log: &log.DefaultLogger,
+		Log:    &log.DefaultLogger,
+		Slient: cfg.QueryLog,
 	}
 	newLogger := gormLogger.LogMode(logger.Info)
 	switch cfg.Driver {
