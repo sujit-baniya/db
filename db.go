@@ -21,7 +21,7 @@ type Config struct {
 	Username   string `yaml:"username" env:"DB_USER"`
 	Password   string `yaml:"password" env:"DB_PASS"`
 	DBName     string `yaml:"db_name" env:"DB_NAME"`
-	QueryLog   bool   `yaml:"query_log" env:"DB_QUERY_LOG" env-default:"false"`
+	Debug      bool   `yaml:"debug" env:"DB_DEBUG" env-default:"false"`
 	Port       int    `yaml:"port" env:"DB_PORT"`
 	MaxOpenCon int    `yaml:"connections" env:"DB_CONNECTIONS" env-default:"100"`
 	MaxIdleCon int    `yaml:"idle_connections" env:"DB_IDLE_CONNECTIONS" env-default:"80"`
@@ -63,7 +63,7 @@ var DB *gorm.DB
 
 var DefaultDialect string
 
-//Default Comment
+// Default Comment
 func Default(cfg Config) error {
 	db, err := New(cfg)
 	if err != nil {
@@ -74,17 +74,22 @@ func Default(cfg Config) error {
 	return nil
 }
 
-//New Comment
+// New Comment
 func New(cfg Config) (*gorm.DB, error) {
 	var db *gorm.DB
+	var newLogger logger.Interface
 	//nolint:wsl,lll
 	var err error //nolint:wsl
 	connectionString := ""
 	gormLogger := Logger{
 		Log:    &log.DefaultLogger,
-		Slient: cfg.QueryLog,
+		Slient: !cfg.Debug,
 	}
-	newLogger := gormLogger.LogMode(logger.Info)
+	if !cfg.Debug {
+		newLogger = gormLogger.LogMode(logger.Silent)
+	} else {
+		newLogger = gormLogger.LogMode(logger.Info)
+	}
 	switch cfg.Driver {
 	case "postgres":
 		connectionString = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s", cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password)
