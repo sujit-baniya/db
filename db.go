@@ -175,7 +175,6 @@ func prepareQuery(db *gorm.DB, paging *Paging) *gorm.DB {
 	if len(paging.OrderBy) == 0 {
 		str := "id desc"
 		paging.OrderBy = append(paging.OrderBy, str)
-
 	}
 	for _, o := range paging.OrderBy {
 		db = db.Order(o)
@@ -185,7 +184,6 @@ func prepareQuery(db *gorm.DB, paging *Paging) *gorm.DB {
 
 // Pages Endpoint for pagination
 func Pages(p *Param, result interface{}) (paginator *Pagination, err error) {
-
 	var (
 		done  = make(chan bool, 1)
 		db    = p.DB.Session(&gorm.Session{})
