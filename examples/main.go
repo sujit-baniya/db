@@ -17,7 +17,7 @@ func main() {
 		Host:     "127.0.0.1",
 		Username: "postgres",
 		Password: "postgres",
-		DBName:   "casbin",
+		DBName:   "verify",
 		Port:     5432,
 	})
 	// paginate()
@@ -31,12 +31,18 @@ func fullText() {
 	fmt.Println(messages)
 }
 
+type OperationView struct {
+	Name string `json:"name" gorm:"column:name"`
+	File string `json:"file" gorm:"column:file"`
+}
+
 func fullTextWithPagination() {
-	var messages []Message
+	var messages []OperationView
 	paging := db.Paging{
-		Limit: 1,
+		Limit:  1,
+		Search: "c7kjhoh3ol0msf6bqs90.csv",
 	}
-	db.DB.Scopes(db.FullTextFilterScope("messages", "I'm goodas"), db.PaginateScope(paging)).Find(&messages)
+	db.DB.Scopes(db.PaginateScope(paging)).Find(&messages)
 	fmt.Println(messages)
 }
 

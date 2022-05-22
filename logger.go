@@ -52,23 +52,23 @@ func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, 
 	case err != nil && l.Log.Level >= log.ErrorLevel:
 		sql, rows := fc()
 		if rows == -1 {
-			l.Log.Error().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msg("")
+			l.Log.Error().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msg("")
 		} else {
-			l.Log.Error().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msg("")
+			l.Log.Error().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msg("")
 		}
 	case elapsed > l.Config.SlowThreshold && l.Config.SlowThreshold != 0 && l.Log.Level >= log.WarnLevel:
 		sql, rows := fc()
 		if rows == -1 {
-			l.Log.Warn().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msgf("SLOW SQL >= %v", l.Config.SlowThreshold)
+			l.Log.Warn().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msgf("SLOW SQL >= %v", l.Config.SlowThreshold)
 		} else {
-			l.Log.Warn().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msgf("SLOW SQL >= %v", l.Config.SlowThreshold)
+			l.Log.Warn().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msgf("SLOW SQL >= %v", l.Config.SlowThreshold)
 		}
 	default:
 		sql, rows := fc()
 		if rows == -1 {
-			l.Log.Info().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msg("")
+			l.Log.Info().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Msg("")
 		} else {
-			l.Log.Info().Caller(4, true).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msg("")
+			l.Log.Info().Caller(4).Err(err).Str("elapsed", fmt.Sprintf("%s", elapsed)).Str("sql", sql).Int64("rows", rows).Msg("")
 		}
 	}
 }
