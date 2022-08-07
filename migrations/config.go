@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"embed"
+
 	"gopkg.in/gorp.v1"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -19,6 +20,7 @@ type Config struct {
 	EmbeddedFS embed.FS
 	Dir        string `yaml:"directory"`
 	TableName  string `yaml:"table"`
+	Dialect  string `yaml:"dialect"`
 }
 
 var DefaultConfig = Config{Dir: "./storage/database/migrations"}
@@ -27,6 +29,9 @@ func NewMigration(cfg Config) {
 
 	if cfg.Dir == "" {
 		cfg.Dir = "migrations"
+	}
+	if cfg.Dir == "" {
+		cfg.Dialect = "postgres"
 	}
 
 	if cfg.TableName != "" {

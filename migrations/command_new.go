@@ -98,31 +98,59 @@ func SmartMigration(migrationName string) string {
 	if nameParts[len(nameParts)-1] == "table" {
 		switch nameParts[0] {
 		case "create":
-			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
-			upQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
+			if DefaultConfig.Dialect == "postgres" {
+				tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
+				createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
+				upQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
-id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
-is_active bool default false,
-created_at timestamptz,
-updated_at timestamptz,
-deleted_at timestamptz
+	id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
+	is_active bool default false,
+	created_at timestamptz,
+	updated_at timestamptz,
+	deleted_at timestamptz
 )` + ";"
-			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
-			downQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
+				dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
+				downQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
+			} else if DefaultConfig.Dialect == "mysql" {
+				tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
+				upQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
+(
+	id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+	is_active bool default false,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME Null DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	deleted_at datetime Null
+)` + ";"
+				downQuery = "DROP TABLE IF EXISTS " + tableName + ";"
+			}
+			break
 		case "drop":
-			tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
-			dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
-			createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
-			upQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
-			downQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
+			if DefaultConfig.Dialect == "postgres" {
+				tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
+				dropSequenceQuery := "DROP SEQUENCE IF EXISTS " + tableName + "_seq;\n"
+				createSequence := "CREATE SEQUENCE IF NOT EXISTS " + tableName + "_id_seq;\n"
+				upQuery = dropSequenceQuery + "DROP TABLE IF EXISTS " + tableName + ";"
+				downQuery = createSequence + "CREATE TABLE IF NOT EXISTS " + tableName + `
 (
-id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
-is_active bool default false,
-created_at timestamptz,
-updated_at timestamptz,
-deleted_at timestamptz
+	id int8 NOT NULL DEFAULT nextval('` + tableName + `_id_seq'::regclass) PRIMARY KEY, 
+	is_active bool default false,
+	created_at timestamptz,
+	updated_at timestamptz,
+	deleted_at timestamptz
 )` + ";"
+			} else if DefaultConfig.Dialect == "mysql" {
+				tableName := strings.Join(nameParts[1:(len(nameParts)-1)], `_`)
+				upQuery = "DROP TABLE IF EXISTS " + tableName + ";"
+				downQuery = "CREATE TABLE IF NOT EXISTS " + tableName + `
+(
+	id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+	is_active bool default false,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME Null DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	deleted_at datetime Null
+)` + ";"
+			}
+			break
 		case "add":
 			for i, part := range nameParts {
 				if part == "in" {
