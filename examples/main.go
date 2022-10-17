@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/sujit-baniya/db"
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ type Message struct {
 }
 
 func main() {
-	db.Default(db.Config{
+	database, err := db.New(db.Config{
 		Driver:   "postgres",
 		Host:     "127.0.0.1",
 		Username: "postgres",
@@ -20,9 +21,12 @@ func main() {
 		DBName:   "verify",
 		Port:     5432,
 	})
-	// paginate()
-	// fullText()
-	fullTextWithPagination()
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.Background()
+	messageRepo := db.NewGormRepository[Message](ctx, database)
+	fmt.Println(messageRepo.RawMapSlice(ctx, "SELECT * FROm messages LIMIT 10"))
 }
 
 func fullText() {
